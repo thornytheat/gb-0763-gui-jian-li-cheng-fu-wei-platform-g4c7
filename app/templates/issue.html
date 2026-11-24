@@ -1,4 +1,19 @@
 <div class="work-grid"><section class="panel"><h3>巡检证据单</h3>
-{% if ledger %}<form id="issue-run"><label for="run">归档批次</label><select id="run">{% for item in ledger %}<option value="{{ item.run_id }}" {{ 'selected' if item.run_id == run_id }}>{{ item.run_id[:16] }} · {{ item.summary.mapped_mm }} mm</option>{% endfor %}</select><button>签发证据</button></form>
-<a id="download" hidden>下载签发证据</a><output id="seal"></output>{% else %}<p>请先完成一笔批次归档。</p>{% endif %}
-</section><section class="panel"><h3>随件证据</h3><ul><li>报文原件和隔离行</li><li>双基点、断链与掉线记录</li><li>轨段覆盖与缺陷群清单</li></ul></section></div>
+{% if ledger %}<form id="issue-run"><label for="run">归档批次</label><select id="run">{% for item in ledger %}<option value="{{ item.run_id }}" {{ 'selected' if item.run_id == run_id }}>{{ item.run_id[:16] }} · 双向已验 {{ item.summary.verified_mm }} mm</option>{% endfor %}</select><button>签发证据</button></form>
+<a id="download" hidden>下载签发证据</a><output id="seal"></output>
+{% set active = ledger | selectattr('run_id', 'equalto', run_id) | first if run_id else ledger[0] %}
+{% if active %}
+<div class="scope-card">
+  <h4>签发页面已验范围（按复位区段对账）</h4>
+  <p class="scope-meter">双向已验 <b>{{ active.summary.verified_mm }}</b> / 计划 {{ active.summary.planned_mm }} mm ·
+    单向待签 {{ active.summary.pending_mm }} mm · 缺证 {{ active.summary.missing_mm }} mm</p>
+  <ul class="scope-list">
+    {% for part in active.coverage.verified_parts %}
+    <li>{{ part.chain }} · {{ part.start_mm }} → {{ part.end_mm }}（{{ part.end_mm - part.start_mm }} mm，上行 {{ part.up_runs|join('、') }} × 下行 {{ part.down_runs|join('、') }}）</li>
+    {% else %}<li>暂无双向互证轨段：可先签的已验范围为 0 mm，单向覆盖只能列入待签。</li>{% endfor %}
+  </ul>
+  <p class="scope-note">同一车次往返不互证；反向车仅重合段计入，断链两侧同名里程不互证。</p>
+</div>
+{% endif %}
+{% else %}<p>请先完成一笔批次归档。</p>{% endif %}
+</section><section class="panel"><h3>随件证据</h3><ul><li>报文原件和隔离行</li><li>双基点、断链与掉线记录</li><li>轨段覆盖与双向已验范围、缺陷群清单</li><li>证据单按签发当时的快照范围核验，迟到报文只扩大后续新单</li></ul></section></div>

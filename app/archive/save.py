@@ -25,7 +25,9 @@ def replay(archive, raw):
     identity = {'input_sha256': digest(raw), 'survey_sha256': digest(canonical(survey)),
                 'revision': REVISION, 'parameters': parameters}
     run_id = digest(canonical(identity))
-    summary = {key: evidence['coverage'][key] for key in ('planned_mm', 'mapped_mm', 'missing_mm', 'overlap_mm')}
+    summary = {key: evidence['coverage'][key]
+               for key in ('planned_mm', 'mapped_mm', 'missing_mm', 'overlap_mm',
+                           'verified_mm', 'pending_mm')}
     manifest = dict(identity, run_id=run_id, created_at=datetime.now(timezone.utc).isoformat(),
                     elapsed_ms=round((perf_counter() - started) * 1000), summary=summary)
     with archive.transaction() as db:

@@ -2,23 +2,33 @@
 <div class="work-grid">
   <section class="panel rail-panel">
     <h3>校准基点刻度</h3>
-    <div class="legend"><span>已映射</span><span>缺证</span></div>
+    <div class="legend"><span>双向已验</span><span>单向已映射</span><span>缺证</span></div>
     {% for row in data.tracks %}
-    <div class="rail"><div><strong>{{ row.chain }}</strong><span>{{ row.mapped_mm }} / {{ row.planned_mm }} mm</span></div>
+    <div class="rail"><div><strong>{{ row.chain }}</strong><span>已验 {{ row.verified_mm }} · 已映射 {{ row.mapped_mm }} / {{ row.planned_mm }} mm</span></div>
       <div class="track" aria-label="{{ row.chain }} 覆盖轨">
       {% for lo, hi in row.mapped_parts %}
       <div class="mapped" style="--left:{{ 100 * (lo-row.start_mm)/row.planned_mm }}%;--span:{{ 100 * (hi-lo)/row.planned_mm }}%" title="{{ lo }}–{{ hi }} mm"></div>
       {% endfor %}
+      {% for lo, hi in row.verified_parts %}
+      <div class="verified" style="--left:{{ 100 * (lo-row.start_mm)/row.planned_mm }}%;--span:{{ 100 * (hi-lo)/row.planned_mm }}%" title="双向已验 {{ lo }}–{{ hi }} mm"></div>
+      {% endfor %}
       </div><div class="ticks"><span>{{ row.start_mm }}</span><span>{{ row.end_mm }}</span></div>
+      <p class="rail-runs">上行 {{ row.up_runs|join('、') or '—' }} ｜ 下行 {{ row.down_runs|join('、') or '—' }}</p>
     </div>
     {% endfor %}
     <div class="equation">{{ data.planned_mm }} = {{ data.mapped_mm }} + {{ data.missing_mm }} mm <small>计划 = 已映射 + 缺证</small></div>
+    <div class="equation verified-line">{{ data.verified_mm }} mm 双向已验 · {{ data.pending_mm }} mm 单向待签 <small>同车次往返不互证，反向车仅重合段计入</small></div>
   </section>
   <section class="panel"><h3>掉线缺口</h3>
     {% for item in data.missing_parts %}
     <details open><summary>{{ item.chain }} · {{ item.end_mm - item.start_mm }} mm</summary>
     <p>{{ item.start_mm }} → {{ item.end_mm }}</p><p>{{ item.reasons|join('、') }} · 行 {{ item.sources|join('、') or '—' }}</p></details>
     {% else %}<p>计划轨段已全覆盖。</p>{% endfor %}
+    <h3>可先签的双向已验段</h3>
+    {% for item in data.verified_parts %}
+    <details open><summary>{{ item.chain }} · {{ item.end_mm - item.start_mm }} mm</summary>
+    <p>{{ item.start_mm }} → {{ item.end_mm }}</p><p>上行 {{ item.up_runs|join('、') }} × 下行 {{ item.down_runs|join('、') }}</p></details>
+    {% else %}<p>暂无反向互证轨段，已验范围为 0 mm。</p>{% endfor %}
     <p>重复覆盖 <b>{{ data.overlap_mm }} mm</b></p>
   </section>
 </div>

@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, render_template, request
 
-from app.archive.save import recent
+from app.archive.save import recent, retrieve
 from app.config import REVISION
 from app.errors import TrackError
 from app.inputs import sample
@@ -20,5 +20,10 @@ def screen(section='coverage'):
     label = request.args.get('sample', 'dirty')
     results = inspect(sample(label), section if section not in ('runs', 'issue') else 'coverage')
     ledger = recent(current_app.track_archive)['runs'] if section in ('runs', 'issue') else []
+    if section == 'issue':
+        # 签发页面的已验范围取归档快照（复位区段决定），不按当前报文重新对账。
+        archive = current_app.track_archive
+        for item in ledger:
+            item['coverage'] = retrieve(archive, item['run_id'])['stages']['coverage']
     return render_template('base.html', section=section, nav=SECTIONS, label=label, stages=results,
                            ledger=ledger, rev=REVISION, run_id=request.args.get('run', ''))

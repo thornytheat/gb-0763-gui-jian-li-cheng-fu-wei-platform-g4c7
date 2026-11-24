@@ -27,5 +27,11 @@
 | TRAP-14 | 同编号异值 | 后写覆盖 | 同组隔离 | `app/capture/resolve.py` | `tests/test_capture.py::test_conflict_keeps_both_sources` |
 | TRAP-19 | 同基点多等级 | 文件顺序决定结果 | 高等级优先，同等级冲突留缺 | `app/anchors/match.py` | `tests/test_anchors.py::test_best_grade_is_order_independent` |
 | TRAP-23 | 正好落在断链处 | 重复投影或误落 | 时间和测距均左闭右开 | `app/chainage/interpolate.py` | `tests/test_chainage.py::test_cut_belongs_to_next_span` |
+| TRAP-24 | 反向报文迟到，单向先签虚报双向 | 把单向覆盖当已验 | 按链求上/下行区间交集，无反向则已验为 0 | `app/coverage/balance.py` | `tests/test_coverage.py::test_single_direction_not_verified` |
+| TRAP-25 | 同车次往返互证 | 自己证明自己 | 互证要求 run 不同，同 run 上/下行跳过 | `app/coverage/balance.py` | `tests/test_coverage.py::test_same_run_round_trip_is_not_mutual_evidence` |
+| TRAP-26 | 断链两侧同名里程互证 | 跨链数值相等就放行 | 一切按链分组，跨链不求交 | `app/coverage/balance.py` | `tests/test_coverage.py::test_same_station_on_different_chains_never_cross_verifies` |
+| TRAP-27 | 反向车只部分重合 | 按整段计入已验 | 只取两两交集，缺口两侧不拼接 | `app/coverage/balance.py` | `tests/test_coverage.py::test_opposite_runs_verify_overlap_only` |
+| TRAP-28 | 迟到报文改写旧证据单 | 新数据覆盖旧范围 | 快照冻结，旧单按签发当时范围核验 | `app/archive/save.py` `app/seals/issue.py` | `tests/test_acceptance_scope.py::test_late_reverse_run_expands_new_sheet_but_old_sheet_keeps_scope` |
+| TRAP-29 | 无回执重试产生新单 | 重复签发多份证据 | 主键幂等取回原 seal，不新增 issues 行 | `app/seals/issue.py` | `tests/test_acceptance_scope.py::test_retry_after_issue_returns_original_sheet_without_new_evidence` |
 
-夜巡样例计划 600000 mm，已映射 400000 mm，掉线缺证 200000 mm。重复巡检 100000 mm 单列。档案事务不会发布半份快照。
+夜巡样例计划 600000 mm，已映射 400000 mm，掉线缺证 200000 mm。重复巡检 100000 mm 单列。档案事务不会发布半份快照。夜巡样例无不同车次的反向重合，双向已验为 0 mm，全部已映射长度列入单向待签。
